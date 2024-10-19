@@ -23,8 +23,8 @@ public class Document {
     @Column(name = "dislike")
     private Integer dislike;
 
-    @Column(name = "likes")  // Change "like" to "likes"
-    private Integer likes; // Change the variable name to "likes"
+    @Column(name = "likes")      // Change "like" to "likes"
+    private Integer likes;      // Change the variable name to "likes"
     @Column(name = "filePath")
     private String filePath ;
 
@@ -52,6 +52,9 @@ public class Document {
 
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Commentaire> commentaires;
+    @ManyToOne
+    @JoinColumn(name = "utilisateur_id")
+    private Utilisateur utilisateur;
 
     // Constructors, Getters, and Setters
     public Document() {}

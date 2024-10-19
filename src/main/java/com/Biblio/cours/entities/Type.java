@@ -17,6 +17,8 @@ public class Type {
     private Long id;
 
     private String name;
+    private  String subtitle;
+    private  String description;
 
     @OneToMany(mappedBy = "type", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents;
