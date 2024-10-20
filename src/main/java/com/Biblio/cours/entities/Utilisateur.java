@@ -27,6 +27,9 @@ public class Utilisateur {
 
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Commentaire> commentaires;
+    @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Document> documents;
+
 
     // Constructors, Getters, and Setters
     public Utilisateur() {}
