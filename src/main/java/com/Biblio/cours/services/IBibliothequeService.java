@@ -1,4 +1,4 @@
-package com.Biblio.cours.service;
+package com.Biblio.cours.services;
 
 import com.Biblio.cours.entities.Bibliotheque;
 
