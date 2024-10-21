@@ -34,6 +34,7 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Utilisateur utilisateur) {
         if (utilisateurService.getUtilisateurByEmail(utilisateur.getEmail()).isPresent()) {
@@ -44,7 +45,7 @@ public class AuthController {
         utilisateur.setPassword(passwordEncoder.encode(utilisateur.getPassword()));
 
         // Set user type (you may want to set this based on some logic or request parameter)
-        utilisateur.setType("CLIENT"); // or "ADMIN" for admin users
+        utilisateur.setType("ADMIN"); // or "ADMIN" for admin users
 
         Utilisateur savedUtilisateur = utilisateurService.saveUtilisateur(utilisateur);
 
