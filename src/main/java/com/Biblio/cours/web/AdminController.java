@@ -3,7 +3,8 @@ package com.Biblio.cours.web;
 
 import com.Biblio.cours.entities.Bibliotheque;
 import com.Biblio.cours.entities.Utilisateur;
-import com.Biblio.cours.service.IBibliothequeService;
+import com.Biblio.cours.services.IBibliothequeService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

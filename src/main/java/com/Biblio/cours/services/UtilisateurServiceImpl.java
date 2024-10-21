@@ -1,4 +1,4 @@
-package com.Biblio.cours.service;
+package com.Biblio.cours.services;
 
 
 import com.Biblio.cours.dao.UtilisateurDAO;
@@ -34,6 +34,11 @@ public class UtilisateurServiceImpl implements com.Biblio.cours.services.IUtilis
     @Override
     public void deleteUtilisateur(Long id) {
         utilisateurDao.deleteById(id);
+    }
+
+    @Override
+    public Optional<Utilisateur> getUtilisateurByEmail(String email) {
+        return utilisateurDao.findByEmail(email);
     }
 }
 
