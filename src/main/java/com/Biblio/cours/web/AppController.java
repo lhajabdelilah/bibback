@@ -19,8 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Optional;
 
+@CrossOrigin("http://localhost:3000")
 @RestController
-
 public class AppController {
 
     @Autowired
@@ -45,15 +45,6 @@ public class AppController {
         Utilisateur savedUtilisateur = utilisateurService.saveUtilisateur(utilisateur);
         return new ResponseEntity<>(savedUtilisateur, HttpStatus.CREATED);
     }
-
-
-
-
-
-
-
-
-
 
     // Create or Update Document
     @PostMapping("/api/document/save")
