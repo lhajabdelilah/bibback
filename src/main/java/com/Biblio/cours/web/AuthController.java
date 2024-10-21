@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -43,9 +45,12 @@ public class AuthController {
         // Encode password
         utilisateur.setPassword(passwordEncoder.encode(utilisateur.getPassword()));
 
-        // Set user type (you may want to set this based on some logic or request parameter)
-        utilisateur.setType("CLIENT"); // or "ADMIN" for admin users
-
+        // Définir le type par défaut "CLIENT"
+        String typeUtilisateur = utilisateur.getType();
+        if (typeUtilisateur == null || typeUtilisateur.isEmpty()) {
+            typeUtilisateur = "CLIENT";
+        }
+        utilisateur.setType(typeUtilisateur);
         Utilisateur savedUtilisateur = utilisateurService.saveUtilisateur(utilisateur);
 
         return ResponseEntity.ok(savedUtilisateur);
@@ -65,5 +70,22 @@ public class AuthController {
         final String jwt = jwtUtil.generateToken(userDetails);
 
         return ResponseEntity.ok(new JwtResponse(jwt));
+    }
+    @PostMapping("/changeUserType")
+    public ResponseEntity<?> changeUserType(@RequestParam String email, @RequestParam String newType) {
+        Optional<Utilisateur> optionalUser = utilisateurService.getUtilisateurByEmail(email);
+        if (optionalUser.isPresent()) {
+            Utilisateur user = optionalUser.get();
+            user.setType(newType.toUpperCase());
+            utilisateurService.saveUtilisateur(user);
+
+            // Generate a new token with updated type
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            String newToken = jwtUtil.generateToken(userDetails);
+
+            return ResponseEntity.ok(new JwtResponse(newToken));
+        } else {
+            return ResponseEntity.badRequest().body("User not found");
+        }
     }
 }
