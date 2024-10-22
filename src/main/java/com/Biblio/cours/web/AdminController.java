@@ -2,19 +2,24 @@ package com.Biblio.cours.web;
 
 
 import com.Biblio.cours.dto.BibliothequeDTO;
+import com.Biblio.cours.dto.UtilisateurDTO;
 import com.Biblio.cours.entities.Bibliotheque;
 import com.Biblio.cours.entities.Document;
 import com.Biblio.cours.entities.Utilisateur;
 import com.Biblio.cours.services.IBibliothequeService;
 import com.Biblio.cours.services.IDocumentService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT, RequestMethod.OPTIONS})
@@ -26,10 +31,18 @@ public class AdminController {
     @Autowired
     private IDocumentService documentService;
 
-    @GetMapping("/api/admin/user/all")
-    public ResponseEntity<List<Utilisateur>> getAllUtilisateurs() {
-        List<Utilisateur> utilisateurs = utilisateurService.getAllUtilisateurs();
-        return new ResponseEntity<>(utilisateurs, HttpStatus.OK);
+    @GetMapping("/api/user/test")
+    public ResponseEntity<String> testSerialization() throws JsonProcessingException {
+        Utilisateur user = utilisateurService.getAllUtilisateurs().get(0);
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(user);
+        return new ResponseEntity<>(json, HttpStatus.OK);
+    }
+
+    @PostMapping("/api/user/create")
+    public ResponseEntity<Utilisateur> saveUtilisateurs(@RequestBody Utilisateur utilisateur) {
+        Utilisateur savedUtilisateur = utilisateurService.saveUtilisateur(utilisateur);
+        return new ResponseEntity<>(savedUtilisateur, HttpStatus.CREATED);
     }
 
     @GetMapping("/api/admin/user/{id}")
@@ -38,6 +51,29 @@ public class AdminController {
         return utilisateur.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
+    @PutMapping("/api/user/update/{id}")
+    public ResponseEntity<Utilisateur> updateUtilisateur(@PathVariable Long id, @RequestParam(required = false) String name,
+                                                         @RequestParam(required = false) String email,
+                                                         @RequestParam(required = false) String password,
+                                                         @RequestParam(required = false) String userType,
+                                                         @RequestParam(required = false) MultipartFile image) {
+        Optional<Utilisateur> optionalUtilisateur = utilisateurService.getUtilisateurById(id);
+        if (!optionalUtilisateur.isPresent()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        Utilisateur utilisateur = optionalUtilisateur.get();
+        if (name != null) utilisateur.setNom(name);
+        if (email != null) utilisateur.setEmail(email);
+        if (password != null) utilisateur.setPassword(password); // Ensure proper hashing
+        if (userType != null) utilisateur.setType(userType);
+        // Handle image upload logic here if necessary
+
+        Utilisateur updatedUtilisateur = utilisateurService.saveUtilisateur(utilisateur);
+        return new ResponseEntity<>(updatedUtilisateur, HttpStatus.OK);
+    }
+
 
     @DeleteMapping("/api/admin/user/delete/{id}")
     public ResponseEntity<Void> deleteUtilisateur(@PathVariable Long id) {
@@ -58,6 +94,15 @@ public class AdminController {
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
         return new ResponseEntity<>(dtos, HttpStatus.OK);
+    }
+
+    @GetMapping("/api/user/all")
+    public ResponseEntity<List<UtilisateurDTO>> getAllUtilisateurs() {
+        List<UtilisateurDTO> utilisateurs = utilisateurService.getAllUtilisateurs()
+                .stream()
+                .map(UtilisateurDTO::new)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(utilisateurs, HttpStatus.OK);
     }
 
     private BibliothequeDTO convertToDTO(Bibliotheque bibliotheque) {

@@ -1,6 +1,7 @@
 package com.Biblio.cours.web;
 
 import com.Biblio.cours.entities.Utilisateur;
+import com.Biblio.cours.security.CustomUserDetailsService;
 import com.Biblio.cours.security.JwtResponse;
 import com.Biblio.cours.security.LoginRequest;
 import com.Biblio.cours.services.IUtilisateurService;
@@ -12,14 +13,17 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+@CrossOrigin("http://localhost:3000")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -39,6 +43,7 @@ public class AuthController {
     @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Utilisateur utilisateur) {
+        // Check if user already exists
         if (utilisateurService.getUtilisateurByEmail(utilisateur.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Error: Email is already in use!");
         }

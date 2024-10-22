@@ -17,5 +17,6 @@ public interface IUtilisateurService {
 
     // Delete Utilisateur by ID
     void deleteUtilisateur(Long id);
+
     Optional<Utilisateur> getUtilisateurByEmail(String email);
 }

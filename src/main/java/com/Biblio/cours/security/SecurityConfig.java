@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+
 import java.util.Arrays;
 
 @Configuration
@@ -28,10 +29,14 @@ public class SecurityConfig {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
@@ -40,17 +45,10 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-                  http.csrf().disable()
-
-                .cors().configurationSource(request -> {
-                    CorsConfiguration cors = new CorsConfiguration();
-                    cors.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://yourdomain.com")); // Add your allowed origins here
-                    cors.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    cors.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-                    cors.setAllowCredentials(true);
-                    return cors;
-                })
-                          .and()
+        http
+                .cors() // Enable CORS
+                .and()
+                .csrf().disable()
                 .authorizeRequests()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -58,10 +56,13 @@ public class SecurityConfig {
                 .and()
                 .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Use stateless session for JWT
 
+        // Add JWT authentication filter
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
+
 }

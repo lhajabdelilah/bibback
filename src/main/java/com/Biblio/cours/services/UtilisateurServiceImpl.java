@@ -35,6 +35,7 @@ public class UtilisateurServiceImpl implements com.Biblio.cours.services.IUtilis
     public void deleteUtilisateur(Long id) {
         utilisateurDao.deleteById(id);
     }
+
     @Override
     public Optional<Utilisateur> getUtilisateurByEmail(String email) {
         return utilisateurDao.findByEmail(email);

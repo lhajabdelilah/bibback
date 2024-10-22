@@ -1,5 +1,6 @@
 package com.Biblio.cours.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ public class Type {
     private  String subtitle;
     private  String description;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "type", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents;
 
