@@ -57,8 +57,11 @@ public class DocumentServiceImpl implements IDocumentService {
 
     @Override
     public List<Document> getAllDocuments() {
-        return documentDao.findAll();
+        List<Document> documents = documentDao.findAll();
+        System.out.println("Documents retrieved from the database: " + documents);
+        return documents;
     }
+
 
     @Override
     public Optional<Document> getDocumentById(Long id) {
