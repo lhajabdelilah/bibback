@@ -2,18 +2,23 @@ package com.Biblio.cours.web;
 
 import com.Biblio.cours.entities.Utilisateur;
 import com.Biblio.cours.security.CustomUserDetailsService;
-import com.Biblio.cours.security.JwtRequest;
 import com.Biblio.cours.security.JwtResponse;
-import com.Biblio.cours.security.JwtUtil;
+import com.Biblio.cours.security.LoginRequest;
 import com.Biblio.cours.services.IUtilisateurService;
+import com.Biblio.cours.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
+
 @CrossOrigin("http://localhost:3000")
 @RestController
 @RequestMapping("/api/auth")
@@ -25,29 +30,15 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
     @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private UserDetailsService userDetailsService;
 
     @Autowired
     private IUtilisateurService utilisateurService;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) throws Exception {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(), authenticationRequest.getPassword())
-            );
-        } catch (BadCredentialsException e) {
-            throw new Exception("Incorrect username or password", e);
-        }
-
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getEmail());
-        final String jwt = jwtUtil.generateToken(userDetails);
-
-        return ResponseEntity.ok(new JwtResponse(jwt));
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody Utilisateur utilisateur) {
@@ -56,10 +47,50 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Error: Email is already in use!");
         }
 
-        // Create new user's account
+        // Encode password
         utilisateur.setPassword(passwordEncoder.encode(utilisateur.getPassword()));
+
+        // Définir le type par défaut "CLIENT"
+        String typeUtilisateur = utilisateur.getType();
+        if (typeUtilisateur == null || typeUtilisateur.isEmpty()) {
+            typeUtilisateur = "CLIENT";
+        }
+        utilisateur.setType(typeUtilisateur);
         Utilisateur savedUtilisateur = utilisateurService.saveUtilisateur(utilisateur);
 
         return ResponseEntity.ok(savedUtilisateur);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody LoginRequest loginRequest) throws Exception {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            throw new Exception("Incorrect username or password", e);
+        }
+
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
+        final String jwt = jwtUtil.generateToken(userDetails);
+
+        return ResponseEntity.ok(new JwtResponse(jwt));
+    }
+    @PostMapping("/changeUserType")
+    public ResponseEntity<?> changeUserType(@RequestParam String email, @RequestParam String newType) {
+        Optional<Utilisateur> optionalUser = utilisateurService.getUtilisateurByEmail(email);
+        if (optionalUser.isPresent()) {
+            Utilisateur user = optionalUser.get();
+            user.setType(newType.toUpperCase());
+            utilisateurService.saveUtilisateur(user);
+
+            // Generate a new token with updated type
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            String newToken = jwtUtil.generateToken(userDetails);
+
+            return ResponseEntity.ok(new JwtResponse(newToken));
+        } else {
+            return ResponseEntity.badRequest().body("User not found");
+        }
     }
 }
