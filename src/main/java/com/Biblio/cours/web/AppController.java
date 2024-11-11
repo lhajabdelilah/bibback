@@ -48,7 +48,7 @@ public class AppController {
     }
 
     // Create or Update Document
-    @PostMapping("/api/document/save")
+    @PostMapping("/api/auth/document")
     public ResponseEntity<Document> saveDocument(
             @RequestParam("titre") String titre,
             @RequestParam("description") String description,
@@ -64,22 +64,22 @@ public class AppController {
         Optional<Type> type = typeDAO.findById(typeId);
         Optional<Utilisateur> utilisateur = utilisateurDAO.findById(userId);
 
-
         // Create a new Document instance and set its properties
         Document document = new Document();
         document.setTitre(titre);
         document.setDescription(description);
         document.setFilier(filier);
         document.setNiveaux(niveaux);
-        document.setBibliotheque(bibliotheque.get()); // Set the bibliotheque
-        document.setType(type.get()); // Set the type
-        document.setUtilisateur(utilisateur.get());
+        document.setBibliotheque(bibliotheque.orElseThrow(() -> new RuntimeException("Bibliotheque not found")));
+        document.setType(type.orElseThrow(() -> new RuntimeException("Type not found")));
+        document.setUtilisateur(utilisateur.orElseThrow(() -> new RuntimeException("Utilisateur not found")));
 
         // Save the document using the service
         Document savedDocument = documentService.saveDocument(document, file);
 
         return new ResponseEntity<>(savedDocument, HttpStatus.CREATED);
     }
+
 
 
     // Get all Documents

@@ -26,35 +26,23 @@ public class DocumentServiceImpl implements IDocumentService {
 
     @Value("${file.upload-dir}")
     private String uploadDirectory;
+    @Autowired
+    private GoogleDriveService googleDriveService;
 
-    @Override
     public Document saveDocument(Document document, MultipartFile file) {
-        if (file != null && !file.isEmpty()) {
-            try {
-                // Create a unique filename
-                String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-                String filePath = uploadDirectory + File.separator + fileName; // Use File.separator for cross-platform compatibility
+        try {
+            // Upload file to Google Drive and get the URL
+            String googleDriveUrl = googleDriveService.uploadFile(file);
 
-                // Ensure the upload directory exists
-                Files.createDirectories(Paths.get(uploadDirectory));
+            // Set the Google Drive URL in the Document entity
+            document.setFileUrl(googleDriveUrl); // Assuming you have a fileUrl field in Document
 
-                // Save the file to the specified directory
-                file.transferTo(new File(filePath));
-
-                // Set the file path to the document entity
-                document.setFilePath(filePath);
-                document.setDislike(0);
-                document.setLikes(0);
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException("Failed to store the file.");
-            }
+            // Save the document metadata in the database
+            return documentDao.save(document);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload file to Google Drive", e);
         }
-
-        // Save the document entity in the database
-        return documentDao.save(document);
     }
-
     @Override
     public List<Document> getAllDocuments() {
         List<Document> documents = documentDao.findAll();
@@ -71,15 +59,31 @@ public class DocumentServiceImpl implements IDocumentService {
     @Override
     public void deleteDocument(Long id) {
         Optional<Document> document = documentDao.findById(id);
+
         if (document.isPresent()) {
-            // Delete the file from the directory
+            Document doc = document.get();
+
+            // Extract Google Drive file ID from the URL, assuming the URL is saved in fileUrl
+            String fileUrl = doc.getFileUrl();
+            String googleDriveFileId = extractFileIdFromUrl(fileUrl);
+
+            // Delete the file from Google Drive
             try {
-                Files.deleteIfExists(Paths.get(document.get().getFilePath()));
+                googleDriveService.deleteFile(googleDriveFileId);
             } catch (IOException e) {
                 e.printStackTrace();
+                throw new RuntimeException("Failed to delete file from Google Drive", e);
             }
+
+            // Delete the document from the database
             documentDao.deleteById(id);
         }
+    }
+
+    private String extractFileIdFromUrl(String fileUrl) {
+        // Assuming file URL follows format https://drive.google.com/file/d/FILE_ID/view
+        String[] parts = fileUrl.split("/");
+        return parts[parts.length - 2];
     }
 }
 

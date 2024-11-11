@@ -27,8 +27,7 @@ public class Document {
 
     @Column(name = "likes")      // Change "like" to "likes"
     private Integer likes;      // Change the variable name to "likes"
-    @Column(name = "filePath")
-    private String filePath ;
+    private String fileUrl;
 
 
 
