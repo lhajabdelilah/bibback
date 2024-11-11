@@ -13,6 +13,9 @@ RUN chmod +x ./mvnw
 # Run the Maven build
 RUN ./mvnw clean package -DskipTests
 
+# Debug: List files in the target directory
+RUN ls -l /app/target
+
 # Use a smaller JDK image for the final stage
 FROM openjdk:20-slim
 
@@ -23,7 +26,7 @@ WORKDIR /app
 COPY --from=build /app/target/myapp.jar /app/myapp.jar
 
 # Expose the port the app will run on
-EXPOSE 8080
+EXPOSE 9000
 
 # Run the application
 CMD ["java", "-jar", "/app/myapp.jar"]
