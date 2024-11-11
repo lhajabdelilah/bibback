@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy the local code to the container
 COPY . /app
 
+# Give execution permission to the mvnw script
+RUN chmod +x ./mvnw
+
 # Run the Maven build
 RUN ./mvnw clean package -DskipTests
 
