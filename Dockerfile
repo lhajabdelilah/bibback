@@ -1,27 +1,26 @@
-# Use an official Java runtime as a parent image
-FROM openjdk:20-jdk-slim AS build
+# Use the official OpenJDK 20 JDK image for the build stage
+FROM openjdk:20-jdk-slim as build
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the local Gradle project files into the container
-COPY . .
+# Copy the local code to the container
+COPY . /app
 
-# Install Gradle and build the project (skip tests if needed)
-RUN apt-get update && apt-get install -y gradle && \
-    gradle build -x test
+# Run the Maven build
+RUN ./mvnw clean package -DskipTests
 
 # Use a smaller JDK image for the final stage
-FROM openjdk:20-jre-slim
+FROM openjdk:20-slim
 
-# Set the working directory in the container
+# Set the working directory for the app in the final image
 WORKDIR /app
 
-# Copy the JAR file from the build stage
-COPY --from=build /app/build/libs/your-app-name.jar /app/your-app-name.jar
+# Copy the JAR file from the build stage to the final image
+COPY --from=build /app/target/myapp.jar /app/myapp.jar
 
-# Expose the port your Spring Boot app is running on
+# Expose the port the app will run on
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "/app/your-app-name.jar"]
+CMD ["java", "-jar", "/app/myapp.jar"]
